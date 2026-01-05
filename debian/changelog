@@ -1,0 +1,8 @@
+codevar (1.0.0) unstable; urgency=medium
+
+  * Initial release
+  * Codevar utility for generating encoded variables using secrets
+  * Base encoding/decoding utility supporting base64, base85, base91, base122
+
+ -- Lenik (谢继雷) <lenik@bodz.net>  Mon, 06 Jan 2026 12:00:00 +0000
+

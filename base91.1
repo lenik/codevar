@@ -1,0 +1,67 @@
+.TH BASE91 1 "January 2026" "base91 1.0.0" "User Commands"
+.SH NAME
+base91 \- encode or decode data using base encoding schemes
+.SH SYNOPSIS
+.B base91
+[\fIOPTIONS\fR] [\fIFILES\fR...]
+.SH DESCRIPTION
+\fBbase91\fR encodes or decodes data using various base encoding schemes
+(base64, base85, base91, base122). If FILES is \- or not specified, read from
+stdin.
+.PP
+If the program name ends with 64/85/91/122, that determines the default
+encoding type. This can be overridden by options.
+.SH OPTIONS
+.TP
+\fB\-b\fR, \fB\-\-binary\fR
+Treat input as binary data.
+.TP
+\fB\-t\fR, \fB\-\-text\fR
+Treat input as text (default).
+.TP
+\fB\-d\fR, \fB\-\-decode\fR
+Decode data instead of encoding.
+.TP
+\fB\-i\fR, \fB\-\-ignore\-garbage\fR
+When decoding, ignore non-alphabet characters.
+.TP
+\fB\-w\fR, \fB\-\-wrap=\fR\fICOLS\fR
+Wrap encoded lines after COLS characters (default 76). Use 0 to disable
+line wrapping.
+.TP
+\fB\-6\fR, \fB\-\-base64\fR
+Use base64 encoding.
+.TP
+\fB\-8\fR, \fB\-\-base85\fR
+Use base85 encoding.
+.TP
+\fB\-9\fR, \fB\-\-base91\fR
+Use base91 encoding.
+.TP
+\fB\-B\fR, \fB\-\-base122\fR
+Use base122 encoding.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Display help message and exit.
+.TP
+\fB\-\-version\fR
+Display version information and exit.
+.SH EXAMPLES
+.TP
+Encode a file to base91:
+\fBbase91\fR file.txt
+.TP
+Decode base64 from stdin:
+\fBcat\fR encoded.txt | \fBbase91\fR \fB\-6\fR \fB\-d\fR \fB\-i\fR
+.TP
+Encode with no line wrapping:
+\fBbase91\fR \fB\-w\fR 0 file.txt
+.TP
+Use as base64 encoder via symlink:
+\fBln\fR \fB\-s\fR base91 base64
+\fB./base64\fR file.txt
+.SH AUTHOR
+Written by Lenik.
+.SH SEE ALSO
+\fBbase64\fR(1), \fBuuencode\fR(1)
+

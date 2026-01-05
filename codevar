@@ -1,0 +1,234 @@
+#!/bin/bash
+
+    : ${RCSID:=$Id: codevar 1.0.0 2026-01-06 - $}
+    : ${PROGRAM_TITLE:="Generate encoded variable using secret and text"}
+    : ${PROGRAM_SYNTAX:="[OPTIONS] TEXT"}
+
+    . shlib-import cliboot
+    
+    # Default values
+    opt_secret=""
+    opt_length=8
+    opt_digest="sha256"
+    opt_encoding="base64"
+    YEAR_PROTECT=0
+
+    bindir="${0%/*}"
+    binbase="${bindir##*/}"
+    if [ "$binbase" = "bin" ]; then
+        projectdir="${bindir%/*}"
+    else
+        projectdir="${bindir}"
+    fi
+
+    # Config file
+    configdir="$HOME/.config/codevar"
+    config_ini="$configdir/config.ini"
+
+    # Load config if exists
+    if [ -f "$config_ini" ]; then
+        _log2 "Loading config from $config_ini"
+        while IFS='=' read -r key value; do
+            case "$key" in
+                secret) opt_secret="$value" ;;
+                length) opt_length="$value" ;;
+                digest) opt_digest="$value" ;;
+                encoding) opt_encoding="$value" ;;
+            esac
+        done < "$config_ini"
+        _log2 "Config loaded: secret=${opt_secret:+***}, length=$opt_length, digest=$opt_digest, encode=$opt_encoding"
+    else
+        _log2 "Config file not found: $config_ini"
+    fi
+
+    option -s --secret =SECRET      "Secret key to use"
+    option -l --length =LEN         "Trim output to length (default: $opt_length)"
+    option -d --digest =DGST        "Digest algorithm (default: $opt_digest)"
+    option -y --year                "Protect secret with year around: yyyy + SECRET + yyyy"
+    option -e --encoding =ENCODING  "Encoding method (default: $opt_encoding)"
+    option -b --base64              "Use base64 encoding (default)"
+    option -8 --base85              "Use base85 encoding"
+    option -9 --base91              "Use base91 encoding"
+    option -B --base122             "Use base122 encoding"
+    option -q --quiet
+    option -v --verbose
+    option -h --help
+    option    --version
+
+function setopt() {
+    case "$1" in
+        -s|--secret)
+            opt_secret="$2";;
+        -l|--length)
+            opt_length="$2";;
+        -d|--digest)
+            opt_digest="$2";;
+        -y|--year)
+            YEAR_PROTECT=1;;
+        -e|--encoding)
+            opt_encoding="$2";;
+        -b|--base64)
+            opt_encoding="base64";;
+        -8|--base85)
+            opt_encoding="base85";;
+        -9|--base91)
+            opt_encoding="base91";;
+        -B|--base122)
+            opt_encoding="base122";;
+        -h|--help)
+            help $1; exit;;
+        -q|--quiet)
+            LOGLEVEL=$((LOGLEVEL - 1));;
+        -v|--verbose)
+            LOGLEVEL=$((LOGLEVEL + 1));;
+        --version)
+            show_version; exit;;
+        *)
+            quit "invalid option: $1";;
+    esac
+}
+
+function generate_secret_prime() {
+    local secret="$1"
+    local year=$(date +%Y)
+
+    _log3 "Generating secret prime (digest: $opt_digest, year_protect: $YEAR_PROTECT)"
+
+    if [ "$YEAR_PROTECT" = 1 ]; then
+        secret="${year}${secret}${year}"
+        _log3 "Year protection enabled: secret wrapped with $year"
+    fi
+
+    printf "%s" "$secret" | openssl dgst -$opt_digest -binary
+}
+
+function do_encode() {
+    local encoding="$1"
+    shift
+
+    _log2 "Encoding with method: $encoding"
+
+    case "$encoding" in
+        base85)
+            base85 "$@";;
+        base91)
+            base91 "$@";;
+        base122)
+            base122 "$@";;
+        *)
+            base64 "$@";;
+    esac
+}
+
+function main() {
+    if [ $# -lt 1 ]; then
+        echo "TEXT is required."
+        echo "Usage: $0 [OPTIONS] TEXT"
+        return 1
+    fi
+
+    local TEXT="$*"
+
+    _log2 "Processing text (length: ${#TEXT}, target length: $opt_length, encoding: $opt_encoding)"
+    
+    # Encode the combined string
+    local encoded
+    encoded=$(
+        (
+            generate_secret_prime "$opt_secret"
+            printf "%s" "$TEXT"
+            generate_secret_prime "$opt_secret"
+        ) | do_encode "$opt_encoding"
+    )
+    
+    if [ $? -eq 0 ] && [ -n "$encoded" ]; then
+        _log2 "Encoded string length: ${#encoded}"
+
+        # Trim to specified length
+        local trim="${encoded:0:$opt_length}"
+
+        _log2 "Final result (length: ${#trim})"
+        printf "%s\n" "$trim"
+    else
+        _error "ERROR: Failed to encode"
+        quit "failed to encode"
+    fi
+}
+
+BASE64=
+function base64() {
+    if [ -z "$BASE64" ]; then
+        if BASE64=$( which base64 2>&1 ); then
+            _log3 "Using system base64 command"
+        elif BASE64=$( which base91 2>&1 ); then
+            BASE64="$BASE64 -6"
+            _log3 "Using base91 -6 for base64 encoding"
+        elif [ -f "$projectdir/base91" ]; then
+            BASE64="$projectdir/base91 -6"
+            _log3 "Using project base91 for base64 encoding"
+        else
+            _error "ERROR: base64 encoder not found"
+            quit "base64 encoder not found"
+        fi
+    fi
+    $BASE64 "$@" 2>/dev/null
+}
+
+BASE85=
+function base85() {
+    if [ -z "$BASE85" ]; then
+        if BASE85=$( which base85 ); then
+            _log3 "Using system base85 command"
+        elif BASE85=$( which base91 ); then
+            BASE85="$BASE85 -8"
+            _log3 "Using base91 -8 for base85 encoding"
+        elif [ -f "$projectdir/base91" ]; then
+            BASE85="$projectdir/base91 -8"
+            _log3 "Using project base91 for base85 encoding"
+        else
+            _error "ERROR: base85 encoder not found"
+            quit "base85 encoder not found"
+        fi
+    fi
+    $BASE85 "$@" 2>/dev/null
+}
+
+BASE91=
+function base91() {
+    if [ -z "$BASE91" ]; then
+        if BASE91=$( which base91 ); then
+            _log3 "Using system base91 command"
+        elif BASE91=$( which base91 ); then
+            BASE91="$BASE91 -9"
+            _log3 "Using base91 -9 for base91 encoding"
+        elif [ -f "$projectdir/base91" ]; then
+            BASE91="$projectdir/base91 -9"
+            _log3 "Using project base91 for base91 encoding"
+        else
+            _error "ERROR: base91 encoder not found"
+            quit "base91 encoder not found"
+        fi
+    fi
+    $BASE91 "$@" 2>/dev/null
+}
+
+BASE122=
+function base122() {
+    if [ -z "$BASE122" ]; then
+        if which base122; then
+            _log3 "Using system base122 command"
+        elif BASE122=$( which base91 ); then
+            BASE122="$BASE122 -B"
+            _log3 "Using base91 -B for base122 encoding"
+        elif [ -f "$projectdir/base91" ]; then
+            BASE122="$projectdir/base91 -B"
+            _log3 "Using project base91 for base122 encoding"
+        else
+            _error "ERROR: base122 encoder not found"
+            quit "base122 encoder not found"
+        fi
+    fi
+    $BASE122 "$@" 2>/dev/null
+}
+
+boot "$@"

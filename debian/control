@@ -1,0 +1,20 @@
+Source: codevar
+Section: utils
+Priority: optional
+Maintainer: Lenik <lenik@example.com>
+Build-Depends: debhelper-compat (= 13), meson, gcc, libc6-dev
+Standards-Version: 4.6.0
+Homepage: https://github.com/example/codevar
+
+Package: codevar
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Generate encoded variable using secret and text
+ Codevar is a command-line utility for generating encoded variables
+ using secrets and text input. It supports multiple base encoding schemes
+ (base64, base85, base91, base122) and includes base encoding utilities.
+ .
+ The package includes:
+  - codevar: Main utility for generating encoded variables
+  - base91: Base encoding/decoding utility (base64, base85, base91, base122)
+

@@ -1,0 +1,30 @@
+# bash completion for base91
+
+_base91()
+{
+    local cur prev words cword
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    words=("${COMP_WORDS[@]}")
+
+    local opts="-b --binary -t --text -d --decode -i --ignore-garbage -w --wrap -6 --base64 -8 --base85 -9 --base91 -B --base122 -h --help --version"
+
+    case "${prev}" in
+        -w|--wrap)
+            COMPREPLY=($(compgen -W "0 76" -- "${cur}"))
+            return 0
+            ;;
+    esac
+
+    if [[ ${cur} == -* ]]; then
+        COMPREPLY=($(compgen -W "${opts}" -- "${cur}"))
+        return 0
+    fi
+
+    COMPREPLY=($(compgen -f -- "${cur}"))
+    return 0
+}
+
+complete -F _base91 base91 base64 base85 base122
+

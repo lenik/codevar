@@ -1,0 +1,75 @@
+.TH CODEVAR 1 "January 2026" "codevar 1.0.0" "User Commands"
+.SH NAME
+codevar \- generate encoded variable using secret and text
+.SH SYNOPSIS
+.B codevar
+[\fIOPTIONS\fR] \fITEXT\fR
+.SH DESCRIPTION
+\fBcodevar\fR generates encoded variables using a secret key and text input.
+The mechanism combines the secret (optionally protected with year) with the
+text, encodes it using a base encoding scheme, and trims to the specified
+length.
+.PP
+Mechanism:
+  secret' = digest(yyyy + SECRET + yyyy)  (when -y flag is used)
+  result = trim(encode(secret' + TEXT + secret'), length)
+.SH OPTIONS
+.TP
+\fB\-s\fR, \fB\-\-secret=\fR\fISECRET\fR
+Secret key to use.
+.TP
+\fB\-l\fR, \fB\-\-length=\fR\fILEN\fR
+Trim output to length (default: 8).
+.TP
+\fB\-d\fR, \fB\-\-digest=\fR\fIDGST\fR
+Digest algorithm (default: sha256).
+.TP
+\fB\-y\fR, \fB\-\-year\fR
+Protect secret with year around: yyyy + SECRET + yyyy.
+.TP
+\fB\-e\fR, \fB\-\-encode=\fR\fIENCODE\fR
+Encoding method (default: base64).
+.TP
+\fB\-b\fR, \fB\-\-base64\fR
+Use base64 encoding.
+.TP
+\fB\-8\fR, \fB\-\-base85\fR
+Use base85 encoding.
+.TP
+\fB\-9\fR, \fB\-\-base91\fR
+Use base91 encoding.
+.TP
+\fB\-B\fR, \fB\-\-base122\fR
+Use base122 encoding.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Display help message and exit.
+.TP
+\fB\-\-version\fR
+Display version information and exit.
+.SH CONFIGURATION
+Default values can be defined in \fB~/.config/codevar/config.ini\fR:
+.PP
+.RS
+.nf
+secret=SECRET
+length=LEN
+digest=DGST
+encode=ENCODE
+.fi
+.RE
+.SH EXAMPLES
+.TP
+Generate encoded variable with secret:
+\fBcodevar\fR \fB\-s\fR "mysecret" "hello world"
+.TP
+Use year protection:
+\fBcodevar\fR \fB\-s\fR "mysecret" \fB\-y\fR "hello world"
+.TP
+Use base91 encoding with custom length:
+\fBcodevar\fR \fB\-s\fR "mysecret" \fB\-9\fR \fB\-l\fR 12 "hello world"
+.SH AUTHOR
+Written by Lenik.
+.SH SEE ALSO
+\fBbase91\fR(1), \fBbase64\fR(1)
+

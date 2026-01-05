@@ -1,0 +1,40 @@
+# bash completion for codevar
+
+_codevar()
+{
+    local cur prev words cword
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    words=("${COMP_WORDS[@]}")
+
+    local opts="-s --secret -l --length -d --digest -y --year -e --encode -b --base64 -8 --base85 -9 --base91 -B --base122 -q --quiet -v --verbose -h --help --version"
+
+    case "${prev}" in
+        -s|--secret)
+            return 0
+            ;;
+        -l|--length)
+            COMPREPLY=($(compgen -W "8 10 12 16 20 32 64" -- "${cur}"))
+            return 0
+            ;;
+        -d|--digest)
+            COMPREPLY=($(compgen -W "sha256 sha512 md5 sha1" -- "${cur}"))
+            return 0
+            ;;
+        -e|--encode)
+            COMPREPLY=($(compgen -W "base64 base85 base91 base122" -- "${cur}"))
+            return 0
+            ;;
+    esac
+
+    if [[ ${cur} == -* ]]; then
+        COMPREPLY=($(compgen -W "${opts}" -- "${cur}"))
+        return 0
+    fi
+
+    return 0
+}
+
+complete -F _codevar codevar
+

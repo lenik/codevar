@@ -1,0 +1,39 @@
+# Build artifacts
+*.o
+base91
+build/
+*.a
+*.so
+
+# Temporary files
+*.tmp
+*.swp
+*~
+.*.swp
+.DS_Store
+
+# Test artifacts
+test/tmp.*
+/tmp/tmp.*
+
+# Debian build files
+debian/codevar
+debian/files
+debian/*-stamp
+debian/*.debhelper
+debian/*.substvars
+debian/*.log
+debian/*.tar.gz
+
+# Meson build directory
+build/
+
+# Editor files
+*.bak
+*.orig
+.vscode/
+.idea/
+
+# Config files (user-specific)
+*.ini.local
+
